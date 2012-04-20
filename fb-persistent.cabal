@@ -1,5 +1,5 @@
 name:              fb-persistent
-version:           0.1
+version:           0.1.1
 license:           BSD3
 license-file:      LICENSE
 author:            Felipe Lessa
@@ -32,4 +32,4 @@ library
   build-depends:
       base       >= 4     && < 5
     , fb         >= 0.7.1
-    , persistent >= 0.7   && < 0.9
+    , persistent >= 0.7   && < 0.10
