@@ -12,6 +12,7 @@
 -- @
 module Facebook.Persistent () where
 
+import Control.Applicative ((<$>))
 import Database.Persist
 import Facebook
 
@@ -25,4 +26,12 @@ instance PersistField Action where
                            \Could not parse action"
           Left err -> Left err
     sqlType = sqlType . show
+    isNullable _ = False
+
+
+-- | From @fb-persistent@.  Since 0.1.2.
+instance PersistField Id where
+    toPersistValue = toPersistValue . idCode
+    fromPersistValue v = Id <$> fromPersistValue v
+    sqlType = sqlType . idCode
     isNullable _ = False
