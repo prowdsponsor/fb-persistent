@@ -17,11 +17,13 @@ module Facebook.Persistent () where
 
 import Control.Applicative ((<$>), (<*>))
 import Data.String (fromString)
+import Data.Text (Text)
 import Data.Int (Int64)
 import Data.Word (Word8)
 import Database.Persist
 import Facebook
 import qualified Data.Serialize as S
+import qualified Data.Text.Encoding as TE
 import qualified Data.Time.Clock as T
 import qualified Data.Time.Clock.POSIX as T
 
@@ -39,10 +41,13 @@ instance PersistField Action where
 
 
 -- | From @fb-persistent@.  Since 0.1.2.
+--
+-- We use 'ByteString' for historical purposes in order to
+-- maintain compatibility with @fb < 0.13@.
 instance PersistField Id where
-    toPersistValue = toPersistValue . idCode
-    fromPersistValue v = Id <$> fromPersistValue v
-    sqlType = sqlType . idCode
+    toPersistValue = toPersistValue . TE.encodeUtf8 . idCode
+    fromPersistValue v = Id . TE.decodeUtf8 <$> fromPersistValue v
+    sqlType = sqlType . TE.encodeUtf8 . idCode
     isNullable _ = False
 
 
@@ -71,26 +76,38 @@ class AccessTokenKind kind where
 instance AccessTokenKind UserKind where
   accessTokenPut (UserAccessToken uid token expires) = do
     S.putWord8 0
-    S.put uid
-    S.put token
+    putId uid
+    putText token
     putUTCTime expires
   accessTokenGet = do
     v <- S.getWord8
     case v of
-      0 -> UserAccessToken <$> S.get <*> S.get <*> getUTCTime
+      0 -> UserAccessToken <$> getId <*> getText <*> getUTCTime
       1 -> fail $ "fb-persistent: AccessToken: tried to decode an AppAccessToken as UserAccessToken."
       _ -> accessTokenUnknownVersion v
 
 instance AccessTokenKind AppKind where
   accessTokenPut (AppAccessToken token) = do
     S.putWord8 1
-    S.put token
+    putText token
   accessTokenGet = do
     v <- S.getWord8
     case v of
-      1 -> AppAccessToken <$> S.get
+      1 -> AppAccessToken <$> getText
       0 -> fail $ "fb-persistent: AccessToken: tried to decode an UserAccessToken as AppAccessToken."
       _ -> accessTokenUnknownVersion v
+
+getText :: S.Get Text
+getText = TE.decodeUtf8 <$> S.get
+
+putText :: Text -> S.Put
+putText = S.put . TE.encodeUtf8
+
+getId :: S.Get Id
+getId = Id <$> getText
+
+putId :: Id -> S.Put
+putId = putText . idCode
 
 
 putUTCTime :: T.UTCTime -> S.Put
