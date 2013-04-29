@@ -16,11 +16,13 @@
 module Facebook.Persistent () where
 
 import Control.Applicative ((<$>), (<*>))
+import Control.Monad (liftM)
 import Data.String (fromString)
 import Data.Text (Text)
 import Data.Int (Int64)
 import Data.Word (Word8)
 import Database.Persist
+import Database.Persist.Sql
 import Facebook
 import qualified Data.Serialize as S
 import qualified Data.Text.Encoding as TE
@@ -36,8 +38,10 @@ instance PersistField Action where
           Right _  -> Left "fromPersistValue[Facebook.Action]: \
                            \Could not parse action"
           Left err -> Left err
-    sqlType = sqlType . show
-    isNullable _ = False
+
+-- | From @fb-persistent@.  Since 0.3.
+instance PersistFieldSql Action where
+    sqlType = sqlType . liftM show
 
 
 -- | From @fb-persistent@.  Since 0.1.2.
@@ -47,8 +51,10 @@ instance PersistField Action where
 instance PersistField Id where
     toPersistValue = toPersistValue . TE.encodeUtf8 . idCode
     fromPersistValue v = Id . TE.decodeUtf8 <$> fromPersistValue v
-    sqlType = sqlType . TE.encodeUtf8 . idCode
-    isNullable _ = False
+
+-- | From @fb-persistent@.  Since 0.3.
+instance PersistFieldSql Id where
+    sqlType = sqlType . liftM (TE.encodeUtf8 . idCode)
 
 
 -- | From @fb-persistent@.  Since 0.1.3.  Note that your fields
@@ -61,8 +67,10 @@ instance AccessTokenKind kind => PersistField (AccessToken kind) where
     fromPersistValue v = do
       bs <- fromPersistValue v
       either (Left . fromString) Right (S.runGet accessTokenGet bs)
-    sqlType = sqlType . S.runPut . accessTokenPut
-    isNullable _ = False
+
+-- | From @fb-persistent@.  Since 0.3.
+instance AccessTokenKind kind => PersistFieldSql (AccessToken kind) where
+    sqlType = sqlType . liftM (S.runPut . accessTokenPut)
 
 
 -- | Since 'AccessToken' is a GADT, our 'S.get' function needs a
