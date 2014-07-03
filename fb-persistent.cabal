@@ -1,5 +1,5 @@
 name:              fb-persistent
-version:           0.3.2
+version:           0.3.3
 license:           BSD3
 license-file:      LICENSE
 author:            Felipe Lessa
@@ -9,7 +9,7 @@ category:          Web
 stability:         Experimental
 cabal-version:     >= 1.8
 build-type:        Simple
-homepage:          https://github.com/meteficha/fb-persistent
+homepage:          https://github.com/prowdsponsor/fb-persistent
 
 description:
   This package provides orphan Persistent instances to Facebook
@@ -21,7 +21,7 @@ description:
 
 source-repository head
   type:     git
-  location: git://github.com/meteficha/fb-persistent.git
+  location: git://github.com/prowdsponsor/fb-persistent.git
 
 
 library
