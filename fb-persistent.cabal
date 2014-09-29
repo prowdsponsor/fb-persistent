@@ -34,5 +34,5 @@ library
     , fb         >= 0.13
     , persistent >= 1.2   && < 2.2
     , cereal     >= 0.3   && < 0.5
-    , time       == 1.4.*
+    , time       >= 1.4   && < 1.6
     , text
